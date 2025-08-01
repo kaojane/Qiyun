@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>電子訃聞 - 高啓雲追思紀念</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Serif TC', serif;
+            background-color: #f8f3e9;
+            color: #3d3d3d;
+        }
+        .lotus-bg {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100' fill='none'%3E%3Cpath d='M50 10C45 25 35 35 20 40C35 45 45 55 50 70C55 55 65 45 80 40C65 35 55 25 50 10Z' fill='%23f0e6d2' fill-opacity='0.3'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 100px 100px;
+        }
+        .memorial-card {
+            background-color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border-radius: 8px;
+        }
+        .buddha-border {
+            border: 1px solid #d4b78f;
+        }
+        .tab-active {
+            border-bottom: 2px solid #9c7c38;
+            color: #9c7c38;
+        }
+        #map {
+            height: 300px;
+            width: 100%;
+            border-radius: 8px;
+        }
+        .gold-text {
+            color: #9c7c38;
+        }
+        .gold-bg {
+            background-color: #9c7c38;
+        }
+        .light-gold-bg {
+            background-color: #f0e6d2;
+        }
+        .download-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .download-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(156, 124, 56, 0.2);
+        }
+        .calendar-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+        }
+        .tabs-container {
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .tabs-container::-webkit-scrollbar {
+            display: none;
+        }
+        .photo-item {
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .photo-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(156, 124, 56, 0.15);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8);
+            animation: fadeIn 0.3s;
+        }
+        .modal-content {
+            margin: auto;
+            display: block;
+            max-width: 90%;
+            max-height: 90%;
+            animation: zoomIn 0.3s;
+        }
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+            z-index: 1001;
+        }
+        .close:hover,
+        .close:focus {
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        @keyframes fadeIn {
+            from {opacity: 0}
+            to {opacity: 1}
+        }
+        @keyframes zoomIn {
+            from {transform: scale(0.9)}
+            to {transform: scale(1)}
+        }
+    </style>
+</head>
+<body class="lotus-bg min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- 頁首 -->
+        <header class="text-center mb-8">
+            <div class="flex justify-center mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 100 100" fill="#9c7c38">
+                    <path d="M50 10C45 25 35 35 20 40C35 45 45 55 50 70C55 55 65 45 80 40C65 35 55 25 50 10Z"/>
+                    <circle cx="50" cy="40" r="5" fill="#9c7c38"/>
+                </svg>
+            </div>
+            <h1 class="text-3xl font-bold gold-text">謹此悼念</h1>
+            <p class="text-xl mt-2">高啓雲 先生 往生紀念</p>
+            <p class="mt-1">1962年9月6日 - 2025年7月31日</p>
+        </header>
+
+        <!-- 主要內容 -->
+        <div class="memorial-card p-6 mb-8">
+            <div class="flex flex-col md:flex-row gap-6">
+                <div class="md:w-1/3">
+                    <div class="buddha-border p-4 rounded-lg text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 100 100" fill="#9c7c38" class="mx-auto">
+                            <circle cx="50" cy="30" r="20"/>
+                            <rect x="40" y="50" width="20" height="40" rx="2"/>
+                            <path d="M30 60 L70 60" stroke="#9c7c38" stroke-width="2"/>
+                            <path d="M25 70 L75 70" stroke="#9c7c38" stroke-width="2"/>
+                        </svg>
+                        <h2 class="text-xl font-bold mt-4 gold-text">高啓雲 先生</h2>
+                        <p class="mt-2">享壽 64 歲</p>
+                        <p class="mt-1 text-sm">阿彌陀佛</p>
+                    </div>
+                </div>
+                <div class="md:w-2/3">
+                    <h3 class="text-xl font-bold mb-4 gold-text">訃聞</h3>
+                    <p class="mb-4 leading-relaxed">
+                        謹訃：我們摯愛的父親高啓雲先生，於2025年7月31日安詳往生，享壽64歲。先父一生慈悲為懷，樂善好施，遺愛人間。家屬謹訂於114年8月15日（農曆6月22日）星期五上午10時於高雄市橋頭殯儀館松鶴廳舉行佛教告別式，恭請 諸位親友蒞臨送行。
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                        <div class="light-gold-bg p-4 rounded-lg">
+                            <h4 class="font-bold gold-text">告別式資訊</h4>
+                            <p class="mt-2">日期：114年8月15日（農曆6月22日）星期五</p>
+                            <p>家奠時間：上午 10:00</p>
+                            <p>公奠時間：上午 10:40</p>
+                            <p>地點：高雄市橋頭殯儀館【松鶴廳】</p>
+                            <p>安葬：隨即發引火化骨骸安於橋頭區慈恩寶塔</p>
+                            <button id="add-to-calendar" class="mt-3 gold-bg text-white px-3 py-1.5 rounded-lg hover:bg-opacity-90 transition calendar-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1z"/>
+                                    <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
+                                </svg>
+                                加入Google行事曆
+                            </button>
+                        </div>
+                        <div class="light-gold-bg p-4 rounded-lg">
+                            <h4 class="font-bold gold-text">致意備註</h4>
+                            <p class="mt-2">懇辭：奠儀、陣頭、罐頭塔</p>
+                            <p>會場統一佈置，如欲致贈花籃請洽：</p>
+                            <p>高啟程 0919-647-294</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分頁內容 -->
+        <div class="memorial-card p-6 mb-8">
+            <div class="tabs-container flex border-b buddha-border mb-6 overflow-x-auto">
+                <button class="tab-btn px-4 py-2 tab-active" data-tab="tab-1">地圖指引</button>
+                <button class="tab-btn px-4 py-2" data-tab="tab-2">孝眷名單</button>
+                <button class="tab-btn px-4 py-2" data-tab="tab-3">相簿回憶</button>
+                <button class="tab-btn px-4 py-2" data-tab="tab-4">追思留言</button>
+                <button class="tab-btn px-4 py-2" data-tab="tab-5">下載訃告圖檔</button>
+            </div>
+
+            <div class="tab-content" id="tab-1">
+                <h3 class="text-xl font-bold mb-4 gold-text">告別式地點</h3>
+                <div id="map" class="mb-4"></div>
+                <div class="light-gold-bg p-4 rounded-lg mt-4">
+                    <h4 class="font-bold gold-text">交通方式</h4>
+                    <div class="mt-2 space-y-2">
+                        <p><strong>開車：</strong>國道一號 → 橋頭交流道下 → 沿省道台1線往橋頭方向 → 橋頭殯儀館</p>
+                        <p><strong>大眾運輸：</strong>搭乘高雄捷運至橋頭站，轉乘計程車或公車至橋頭殯儀館</p>
+                        <p><strong>停車資訊：</strong>殯儀館設有收費停車場</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content hidden" id="tab-2">
+                <h3 class="text-xl font-bold mb-4 gold-text">孝眷名單</h3>
+                <div class="light-gold-bg p-4 rounded-lg">
+                    <ul class="mt-2 space-y-1">
+                        <li>護喪妻：吳麗花</li>
+                        <li>孝男：煥鈞</li>
+                        <li>孝女：婕恩（適邱）</li>
+                        <li>孝女婿：邱政皓</li>
+                        <li>胞姊：春桃（適林）</li>
+                        <li>胞姊夫：林明鐘</li>
+                        <li>胞弟：啟程</li>
+                        <li>胞弟媳：林怡慧</li>
+                        <li>孝侄：漢鴻</li>
+                        <li>孝侄女：郁雯</li>
+                        <li>孝外甥：林宥豪</li>
+                        <li>孝外甥女：林尚儀 林尚卉</li>
+                    </ul>
+                </div>
+                <div class="mt-6 text-center">
+                    <p class="text-sm italic">全體家屬 泣血稽顙 謹此訃告</p>
+                </div>
+            </div>
+
+            <div class="tab-content hidden" id="tab-3">
+                <h3 class="text-xl font-bold mb-4 gold-text">相簿回憶</h3>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <!-- 使用 SVG 作為示範照片，點擊可放大 -->
+                    <div class="buddha-border p-2 rounded-lg photo-item" data-title="家族聚會 (2024)">
+                        <div class="bg-gray-200 aspect-square rounded-md flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 100 100">
+                                <rect width="100" height="70" y="15" fill="#9c7c38" rx="5"/>
+                                <circle cx="30" cy="40" r="10" fill="#f8f3e9"/>
+                                <path d="M10 65 L40 45 L60 55 L90 35" stroke="#f8f3e9" stroke-width="3" fill="none"/>
+                                <path d="M0 85 L100 85" stroke="#9c7c38" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <p class="text-sm mt-2 text-center">家族聚會 (2024)</p>
+                    </div>
+                    <div class="buddha-border p-2 rounded-lg photo-item" data-title="六十大壽 (2022)">
+                        <div class="bg-gray-200 aspect-square rounded-md flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 100 100">
+                                <rect width="100" height="70" y="15" fill="#9c7c38" rx="5"/>
+                                <circle cx="70" cy="40" r="10" fill="#f8f3e9"/>
+                                <path d="M10 55 L30 45 L50 65 L90 35" stroke="#f8f3e9" stroke-width="3" fill="none"/>
+                                <path d="M0 85 L100 85" stroke="#9c7c38" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <p class="text-sm mt-2 text-center">六十大壽 (2022)</p>
+                    </div>
+                    <div class="buddha-border p-2 rounded-lg photo-item" data-title="環島旅行 (2020)">
+                        <div class="bg-gray-200 aspect-square rounded-md flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 100 100">
+                                <rect width="100" height="70" y="15" fill="#9c7c38" rx="5"/>
+                                <circle cx="50" cy="35" r="10" fill="#f8f3e9"/>
+                                <path d="M20 65 L40 55 L60 65 L80 45" stroke="#f8f3e9" stroke-width="3" fill="none"/>
+                                <path d="M0 85 L100 85" stroke="#9c7c38" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <p class="text-sm mt-2 text-center">環島旅行 (2020)</p>
+                    </div>
+                    <div class="buddha-border p-2 rounded-lg photo-item" data-title="銀婚紀念 (2015)">
+                        <div class="bg-gray-200 aspect-square rounded-md flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 100 100">
+                                <rect width="100" height="70" y="15" fill="#9c7c38" rx="5"/>
+                                <circle cx="40" cy="30" r="10" fill="#f8f3e9"/>
+                                <path d="M10 60 L30 50 L50 60 L90 40" stroke="#f8f3e9" stroke-width="3" fill="none"/>
+                                <path d="M0 85 L100 85" stroke="#9c7c38" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <p class="text-sm mt-2 text-center">銀婚紀念 (2015)</p>
+                    </div>
+                    <div class="buddha-border p-2 rounded-lg photo-item" data-title="日月潭遊覽 (2010)">
+                        <div class="bg-gray-200 aspect-square rounded-md flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 100 100">
+                                <rect width="100" height="70" y="15" fill="#9c7c38" rx="5"/>
+                                <circle cx="60" cy="35" r="10" fill="#f8f3e9"/>
+                                <path d="M10 50 L40 60 L60 40 L90 55" stroke="#f8f3e9" stroke-width="3" fill="none"/>
+                                <path d="M0 85 L100 85" stroke="#9c7c38" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <p class="text-sm mt-2 text-center">日月潭遊覽 (2010)</p>
+                    </div>
+                    <div class="buddha-border p-2 rounded-lg photo-item" data-title="全家福 (2005)">
+                        <div class="bg-gray-200 aspect-square rounded-md flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 100 100">
+                                <rect width="100" height="70" y="15" fill="#9c7c38" rx="5"/>
+                                <circle cx="25" cy="35" r="10" fill="#f8f3e9"/>
+                                <path d="M15 65 L35 45 L55 55 L85 35" stroke="#f8f3e9" stroke-width="3" fill="none"/>
+                                <path d="M0 85 L100 85" stroke="#9c7c38" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <p class="text-sm mt-2 text-center">全家福 (2005)</p>
+                    </div>
+                </div>
+                
+                <!-- 照片放大模態視窗 -->
+                <div id="photoModal" class="modal">
+                    <span class="close">&times;</span>
+                    <div class="flex items-center justify-center h-full">
+                        <div class="bg-white p-4 rounded-lg max-w-3xl w-full">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 id="modalTitle" class="text-xl font-bold gold-text"></h3>
+                            </div>
+                            <div class="flex justify-center" id="modalImageContainer">
+                                <!-- 放大後的SVG將在這裡動態替換 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content hidden" id="tab-4">
+                <h3 class="text-xl font-bold mb-4 gold-text">追思留言</h3>
+                <div class="mb-6 space-y-4">
+                    <div class="light-gold-bg p-4 rounded-lg">
+                        <div class="flex justify-between mb-2">
+                            <span class="font-bold">張明德</span>
+                            <span class="text-sm text-gray-600">2025/08/01</span>
+                        </div>
+                        <p>啓雲兄一生為人正直，樂善好施，是我們學習的榜樣。願您一路好走，往生淨土。阿彌陀佛。</p>
+                    </div>
+                    <div class="light-gold-bg p-4 rounded-lg">
+                        <div class="flex justify-between mb-2">
+                            <span class="font-bold">李大華</span>
+                            <span class="text-sm text-gray-600">2025/08/01</span>
+                        </div>
+                        <p>高伯伯，感謝您多年來對我的照顧與教誨，您的智慧與慈悲將永遠留在我心中。願您安息。</p>
+                    </div>
+                    <div class="light-gold-bg p-4 rounded-lg">
+                        <div class="flex justify-between mb-2">
+                            <span class="font-bold">陳美玲</span>
+                            <span class="text-sm text-gray-600">2025/07/31</span>
+                        </div>
+                        <p>高叔叔，您的離去讓我們非常不捨，但相信您已經到了更美好的地方。感恩您生前對我們的關愛，願您安詳。</p>
+                    </div>
+                </div>
+
+                <div class="buddha-border p-4 rounded-lg">
+                    <h4 class="font-bold mb-3 gold-text">留下追思</h4>
+                    <form id="memorial-form">
+                        <div class="mb-4">
+                            <label for="name" class="block mb-1">稱呼</label>
+                            <input type="text" id="name" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="message" class="block mb-1">追思留言 <span class="text-sm text-gray-500">(300字以內)</span></label>
+                            <textarea id="message" rows="4" maxlength="300" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500" required></textarea>
+                            <div class="text-right text-sm text-gray-500 mt-1"><span id="charCount">0</span>/300</div>
+                        </div>
+                        <button type="submit" class="gold-bg text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition">送出留言</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="tab-content hidden" id="tab-5">
+                <h3 class="text-xl font-bold mb-4 gold-text">下載訃告圖檔</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- 直式訃告 第一頁 -->
+                    <div class="download-card buddha-border p-4 rounded-lg text-center">
+                        <div class="bg-gray-100 p-4 rounded-lg mb-4 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="100" height="150" viewBox="0 0 100 150">
+                                <rect width="100" height="150" fill="#f0e6d2" rx="5"/>
+                                <path d="M50 20C45 35 35 45 20 50C35 55 45 65 50 80C55 65 65 55 80 50C65 45 55 35 50 20Z" fill="#9c7c38" fill-opacity="0.3"/>
+                                <rect x="20" y="40" width="60" height="80" fill="#fff" rx="3"/>
+                                <text x="50" y="30" font-family="Arial" font-size="8" fill="#9c7c38" text-anchor="middle">第一頁</text>
+                                <path d="M30 50 L70 50" stroke="#9c7c38" stroke-width="1"/>
+                                <path d="M30 60 L70 60" stroke="#9c7c38" stroke-width="1"/>
+                                <path d="M30 70 L70 70" stroke="#9c7c38" stroke-width="1"/>
+                                <path d="M30 80 L70 80" stroke="#9c7c38" stroke-width="1"/>
+                                <path d="M30 90 L70 90" stroke="#9c7c38" stroke-width="1"/>
+                                <path d="M30 100 L70 100" stroke="#9c7c38" stroke-width="1"/>
+                                <path d="M30 110 L70 110" stroke="#9c7c38" stroke-width="1"/>
+                            </svg>
+                        </div>
+                        <h4 class="font-bold gold-text">直式訃告 - 第一頁</h4>
+                        <button class="gold-bg text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition w-full flex items-center justify-center gap-2 mt-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                                <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                            </svg>
+                            下載第一頁
+                        </button>
+                    </div>
+                    
+                    <!-- 直式訃告 第二頁 -->
+                    <div class="download-card buddha-border p-4 rounded-lg text-center">
+                        <div class="bg-gray-100 p-4 rounded-lg mb-4 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="100" height="150" viewBox="0 0 100 150">
+                                <rect width="100" height="150" fill="#f0e6d2" rx="5"/>
+                                <path d="M50 20C45 35 35 45 20 50C35 55 45 65 50 80C55 65 65 55 80 50C65 45 55 35 50 20Z" fill="#9c7c38" fill-opacity="0.3"/>
+                                <rect x="20" y="40" width="60" height="80" fill="#fff" rx="3"/>
+                                <text x="50" y="30" font-family="Arial" font-size="8" fill="#9c7c38" text-anchor="middle">第二頁</text>
+                                <path d="M30 50 L70 50" stroke="#9c7c38" stroke-width="1"/>
+                                <path d="M30 60 L70 60" stroke="#9c7c38" stroke-width="1"/>
+                                <path d="M30 70 L70 70" stroke="#9c7c38" stroke-width="1"/>
+                                <path d="M30 80 L70 80" stroke="#9c7c38" stroke-width="1"/>
+                                <path d="M30 90 L70 90" stroke="#9c7c38" stroke-width="1"/>
+                                <path d="M30 100 L70 100" stroke="#9c7c38" stroke-width="1"/>
+                                <path d="M30 110 L70 110" stroke="#9c7c38" stroke-width="1"/>
+                            </svg>
+                        </div>
+                        <h4 class="font-bold gold-text">直式訃告 - 第二頁</h4>
+                        <button class="gold-bg text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition w-full flex items-center justify-center gap-2 mt-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                                <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                            </svg>
+                            下載第二頁
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 頁尾 -->
+        <footer class="text-center py-6">
+            <div class="flex justify-center mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 100 100" fill="#9c7c38">
+                    <path d="M50 10C45 25 35 35 20 40C35 45 45 55 50 70C55 55 65 45 80 40C65 35 55 25 50 10Z"/>
+                </svg>
+            </div>
+            <p class="text-sm">高啓雲先生 追思紀念網站</p>
+            <p class="text-sm mt-1">阿彌陀佛</p>
+        </footer>
+    </div>
+
+    <script>
+        // 分頁切換功能
+        document.querySelectorAll('.tab-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                // 移除所有分頁按鈕的活動狀態
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('tab-active');
+                });
+                
+                // 隱藏所有分頁內容
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+                
+                // 設置當前按鈕為活動狀態
+                button.classList.add('tab-active');
+                
+                // 顯示對應的分頁內容
+                const tabId = button.getAttribute('data-tab');
+                document.getElementById(tabId).classList.remove('hidden');
+            });
+        });
+
+        // 地圖初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 初始化地圖 - 橋頭殯儀館位置
+            const map = L.map('map').setView([22.7577, 120.3050], 15);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            
+            // 添加標記
+            const marker = L.marker([22.7577, 120.3050]).addTo(map);
+            marker.bindPopup("<b>高雄市橋頭殯儀館【松鶴廳】</b><br>告別式地點").openPopup();
+        });
+
+        // 追思留言表單提交
+        document.getElementById('memorial-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const message = document.getElementById('message').value;
+            const date = new Date().toLocaleDateString();
+            
+            // 創建新的留言元素
+            const newMessage = document.createElement('div');
+            newMessage.className = 'light-gold-bg p-4 rounded-lg';
+            newMessage.innerHTML = `
+                <div class="flex justify-between mb-2">
+                    <span class="font-bold">${name}</span>
+                    <span class="text-sm text-gray-600">${date}</span>
+                </div>
+                <p>${message}</p>
+            `;
+            
+            // 將新留言添加到留言區域的頂部
+            const messagesContainer = document.querySelector('#tab-4 .mb-6');
+            messagesContainer.insertBefore(newMessage, messagesContainer.firstChild);
+            
+            // 清空表單
+            document.getElementById('name').value = '';
+            document.getElementById('message').value = '';
+            document.getElementById('charCount').textContent = '0';
+            
+            // 顯示成功訊息
+            alert('感謝您的追思留言');
+        });
+
+        // 字數計數功能
+        document.getElementById('message').addEventListener('input', function() {
+            const charCount = this.value.length;
+            document.getElementById('charCount').textContent = charCount;
+        });
+
+        // 下載訃告圖檔功能
+        document.querySelectorAll('#tab-5 .download-card button').forEach(button => {
+            button.addEventListener('click', function() {
+                // 在實際應用中，這裡會是真實的下載功能
+                // 目前僅顯示提示訊息
+                const page = this.closest('.download-card').querySelector('h4').textContent.includes('第一頁') ? '第一頁' : '第二頁';
+                alert(`正在下載訃告${page}`);
+            });
+        });
+
+        // 加入Google行事曆功能
+        document.getElementById('add-to-calendar').addEventListener('click', function() {
+            // 設定行事曆事件參數
+            const eventTitle = '高啓雲先生告別式';
+            const eventDescription = '高啓雲先生告別式，地點：高雄市橋頭殯儀館【松鶴廳】';
+            const eventLocation = '高雄市橋頭殯儀館【松鶴廳】';
+            const eventStartDate = '20250815T100000';
+            const eventEndDate = '20250815T120000';
+            
+            // 建立Google行事曆URL
+            const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventTitle)}&dates=${eventStartDate}/${eventEndDate}&details=${encodeURIComponent(eventDescription)}&location=${encodeURIComponent(eventLocation)}`;
+            
+            // 開啟新視窗以添加到Google行事曆
+            window.open(googleCalendarUrl, '_blank');
+        });
+
+        // 照片放大功能
+        const modal = document.getElementById("photoModal");
+        const modalTitle = document.getElementById("modalTitle");
+        const modalImageContainer = document.getElementById("modalImageContainer");
+        const closeBtn = document.querySelector(".close");
+
+        // 點擊照片時顯示放大視窗
+        document.querySelectorAll('.photo-item').forEach(item => {
+            item.addEventListener('click', function() {
+                // 獲取照片標題
+                const title = this.getAttribute('data-title');
+                modalTitle.textContent = title;
+                
+                // 獲取照片SVG內容並放大
+                const svgContent = this.querySelector('svg').outerHTML;
+                const enlargedSvg = svgContent.replace('width="60" height="60"', 'width="300" height="300"');
+                
+                // 將放大的SVG插入模態視窗
+                modalImageContainer.innerHTML = enlargedSvg;
+                
+                // 顯示模態視窗
+                modal.style.display = "block";
+            });
+        });
+
+        // 點擊關閉按鈕關閉模態視窗
+        closeBtn.addEventListener('click', function() {
+            modal.style.display = "none";
+        });
+
+        // 點擊模態視窗外部區域關閉模態視窗
+        window.addEventListener('click', function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96860990400ff251',t:'MTc1NDA1ODY2Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
