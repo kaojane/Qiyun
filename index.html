@@ -118,7 +118,25 @@
             from {transform: scale(0.9)}
             to {transform: scale(1)}
         }
+
+        .video-container {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%; /* 16:9 比例 */
+  height: 0;
+  overflow: hidden;
+}
+
+.video-container iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
     </style>
+
+    
 </head>
 <body class="lotus-bg min-h-screen">
     <div class="container mx-auto px-4 py-8">
@@ -241,7 +259,15 @@
 
             <div class="tab-content hidden" id="tab-3">
                 <h3 class="text-xl font-bold mb-4 gold-text">影像回憶</h3>
-                <iframe width="560" height="315" src="https://www.youtube.com/embed/BIUf8_LS4P0?si=cwkhiiyC1A63u8J7" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                <div class="video-container">
+  <iframe src="https://www.youtube.com/embed/BIUf8_LS4P0?si=cwkhiiyC1A63u8J7" 
+          title="YouTube video player" 
+          frameborder="0" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+          referrerpolicy="strict-origin-when-cross-origin" 
+          allowfullscreen>
+  </iframe>
+</div>
             </div>
 
             <div class="tab-content hidden" id="tab-4">
@@ -497,6 +523,7 @@
     </script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96860990400ff251',t:'MTc1NDA1ODY2Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
+
 
 
 
